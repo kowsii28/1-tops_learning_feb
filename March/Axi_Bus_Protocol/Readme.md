@@ -96,11 +96,11 @@ Master                              Slave
    │                                  │
    ├─── W (Write Data) ──────────────→│
    │                                  │
-   │←─── B (Write Response) ─────────┤
+   │←─── B (Write Response)───────────┤
    │                                  │
    ├─── AR (Read Address) ───────────→│
    │                                  │
-   │←─── R (Read Data + Response) ───┤
+   │←─── R (Read Data + Response) ────┤
    │                                  │
 ```
 
@@ -144,7 +144,7 @@ Master                              Slave
 - **I2C controller**
 
 #### AXI4-Lite Characteristics:
-- **NO burst transfers** ⚠️
+- **NO burst transfers** 
 - **Single data transfer only** (1 beat maximum)
 - **Simpler hardware** (smaller logic gates)
 - **Lower complexity** (easier to implement)
@@ -543,10 +543,6 @@ So 2 KB can be transferred after one address
 
 ### Important: What Does "256 Beats" Actually Mean?
 
-#### ❌ WRONG:
-"256 beats means 256 bytes are sent"
-
-#### ✓ CORRECT:
 "256 beats means 256 data transfers, where each transfer carries data equal to the bus width"
 
 **Key Points:**
@@ -571,121 +567,6 @@ Total: 1 KB                Total: 2 KB
 ```
 
 ---
-
-## LFSR (Linear Feedback Shift Register)
-
-### What is LFSR?
-
-**LFSR = Linear Feedback Shift Register**
-
-A digital circuit that:
-- Generates **pseudo-random numbers**
-- Uses simple hardware (flip-flops and XOR gates)
-- Operates deterministically (predictable sequence)
-- Widely used in hardware design and testing
-
-### LFSR Basic Concept
-
-#### How it Works:
-1. **Bits shift** through registers (left or right)
-2. **New bit** is calculated from **XOR** of selected bits (taps)
-3. **New bit** is inserted into register
-4. **Sequence repeats** → produces pseudo-random pattern
-
-#### Why "Linear"?
-- Uses **linear operations** (XOR only)
-- XOR in binary is a **linear operation** over GF(2) (Galois Field)
-
-### 4-bit LFSR Example
-
-```
-Register: [ Q3  Q2  Q1  Q0 ]
-
-Feedback: new_bit = Q3 XOR Q2
-
-Clock Cycle    Register State
-    0              1001
-    1              1100
-    2              1110
-    3              1111
-    4              0111
-    ...           ...continues
-```
-
-### Hardware Structure
-
-```
- +----+    +----+    +----+    +----+
- |FF0 | -> |FF1 | -> |FF2 | -> |FF3 |
- +----+    +----+    +----+    +----+
-     ^                         |
-     |________ XOR ____________|
-     
-Feedback taps generate new input bit
-```
-
-### LFSR Applications
-
-| Application | Purpose |
-|-------------|---------|
-| **Random Number Generation** | Generate pseudo-random sequences |
-| **Built-in Self Test (BIST)** | Test hardware functionality |
-| **CRC/Checksum** | Error detection |
-| **Encryption/Scrambling** | Data security |
-| **Test Pattern Generation** | Hardware verification |
-| **Memory Testing** | Test memory arrays |
-
-### LFSR in Your SoC Context
-
-#### AXI4-attached LFSR Example:
-
-```
-"AXI4-attached LFSR; read returns pseudo-random data, 
- writes are compressed into a checksum"
-```
-
-**Meaning:**
-
-| Operation | What Happens |
-|-----------|--------------|
-| **Read** | Returns LFSR pseudo-random value from current state |
-| **Write** | Compresses written data using LFSR polynomial → updates state |
-
-#### Use Cases:
-- **Test peripheral** in SoC
-- **Random data generator** for verification
-- **Signature generator** for design testing
-- **CPU verification** via AXI4 bus
-
-### Simple Verilog LFSR Example
-
-```verilog
-module lfsr (
-    input clk,
-    input reset,
-    output reg [7:0] lfsr
-);
-
-wire feedback;
-
-// Feedback polynomial: tap from bits 7, 5, 4, 3
-assign feedback = lfsr[7] ^ lfsr[5] ^ lfsr[4] ^ lfsr[3];
-
-always @(posedge clk or posedge reset) begin
-    if (reset)
-        lfsr <= 8'h1;  // Initial value
-    else
-        lfsr <= {lfsr[6:0], feedback};  // Shift left, insert feedback
-end
-
-endmodule
-```
-
----
-
-## Homogeneous Slaves
-
-### What are Slaves in Bus Architecture?
 
 In bus protocols like AXI4:
 
@@ -873,7 +754,7 @@ High-Speed Interfaces (DDR, High-speed Sensors):
                         │
                         │ 64-bit
                   ┌─────▼─────┐
-                  │ AXI Switch │
+                  │ AXI Switch│
                   │(Interconn)│
                   └────┬─────┬┘
                        │     │
@@ -922,21 +803,6 @@ Low-speed path:  CPU → Peripherals (APB, 32-bit, no burst)
 - `RDATA` - Read data
 - `RLAST` - Last read data transfer in burst
 - `RRESP` - Read response
-
----
-
-## Additional Resources
-
-### For More Information:
-- ARM AMBA Specification documents
-- AXI Protocol specification sheets
-- Your SoC design documentation
-- AXI Interconnect IP documentation
-
-### Testing LFSR:
-- Use in verification testbenches
-- Implement CRC checkers
-- Build memory BIST structures
 
 ---
 
